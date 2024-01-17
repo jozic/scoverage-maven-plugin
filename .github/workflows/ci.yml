@@ -25,13 +25,16 @@ jobs:
         java-version: ${{ matrix.java }}
     - name: Set up Maven
       run: |
-          if ($env:RUNNER_OS -eq "Linux") {
-            wget -q https://archive.apache.org/dist/maven/maven-3/${{ matrix.maven }}/binaries/apache-maven-${{ matrix.maven }}-bin.tar.gz
-            tar xf apache-maven-${{ matrix.maven }}-bin.tar.gz -C $HOME
-          } elseif ($env:RUNNER_OS -eq "Windows") {
-            Invoke-WebRequest -Uri "https://archive.apache.org/dist/maven/maven-3/${{ matrix.maven }}/binaries/apache-maven-${{ matrix.maven }}-bin.zip" -OutFile maven.zip
-            Expand-Archive maven.zip -DestinationPath $HOME
-          }
+          if [ "$RUNNER_OS" == "Linux" ]; then
+              wget -q https://archive.apache.org/dist/maven/maven-3/${{ matrix.maven }}/binaries/apache-maven-${{ matrix.maven }}-bin.tar.gz
+              tar xf apache-maven-${{ matrix.maven }}-bin.tar.gz -C $HOME
+          elif [ "$RUNNER_OS" == "Windows" ]; then
+              Invoke-WebRequest -Uri "https://archive.apache.org/dist/maven/maven-3/${{ matrix.maven }}/binaries/apache-maven-${{ matrix.maven }}-bin.zip" -OutFile maven.zip
+              Expand-Archive maven.zip -DestinationPath $HOME
+          else
+              echo "$RUNNER_OS not supported"
+              exit 1
+          fi      
           export PATH=$HOME/apache-maven-${{ matrix.maven }}/bin:$PATH
     - name: print Maven and Java versions
       run: $HOME/apache-maven-${{ matrix.maven }}/bin/mvn --version
