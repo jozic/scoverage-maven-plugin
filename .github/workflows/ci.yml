@@ -12,6 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
+        maven: [ '3.6.3', '3.8.8', '3.9.6' ]
         java: [ '11', '17' ]
         os: [ 'ubuntu-latest', 'windows-latest' ]
     runs-on: ${{ matrix.os }}
@@ -22,9 +23,19 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: ${{ matrix.java }}
+    - name: Set up Maven
+      run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" ]]; then
+            wget -q https://archive.apache.org/dist/maven/maven-3/${{ matrix.maven }}/binaries/apache-maven-${{ matrix.maven }}-bin.tar.gz
+            tar xf apache-maven-${{ matrix.maven }}-bin.tar.gz -C $HOME
+          elif [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            Invoke-WebRequest -Uri "https://archive.apache.org/dist/maven/maven-3/${{ matrix.maven }}/binaries/apache-maven-${{ matrix.maven }}-bin.zip" -OutFile maven.zip
+            Expand-Archive maven.zip -DestinationPath $HOME
+          fi
+          export PATH=$HOME/apache-maven-${{ matrix.maven }}/bin:$PATH
     - name: print Maven and Java versions
-      run: mvn --version
+      run: $HOME/apache-maven-${{ matrix.maven }}/bin/mvn --version
     - name: Build
-      run: mvn -ntp -B clean verify
+      run: $HOME/apache-maven-${{ matrix.maven }}/bin/mvn -ntp -B clean verify
     - name: Generate site
-      run: mvn -ntp -B clean site -P publicsite
+      run: $HOME/apache-maven-${{ matrix.maven }}/bin/mvn -ntp -B clean site -P publicsite
